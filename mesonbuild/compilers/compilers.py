@@ -68,6 +68,7 @@ lang_suffixes = {
     'cython': ('pyx', ),
     'nasm': ('asm', 'nasm',),
     'masm': ('masm',),
+    'cobol': ('cbl', 'cob', 'cpy',),
 }
 all_languages = lang_suffixes.keys()
 c_cpp_suffixes = {'h'}

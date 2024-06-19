@@ -368,6 +368,7 @@ class _BuildTarget(_BaseBuildTarget):
     cython_args: T.List[str]
     nasm_args: T.List[str]
     masm_args: T.List[str]
+    cobol_args: T.List[str]
 
 
 class _LibraryMixin(TypedDict):
@@ -444,6 +445,8 @@ class Library(_BuildTarget, _SharedLibMixin, _StaticLibMixin, _LibraryMixin):
     nasm_shared_args: NotRequired[T.List[str]]
     masm_static_args: NotRequired[T.List[str]]
     masm_shared_args: NotRequired[T.List[str]]
+    cobol_static_args: NotRequired[T.List[str]]
+    cobol_shared_args: NotRequired[T.List[str]]
 
 
 class BuildTarget(Library):

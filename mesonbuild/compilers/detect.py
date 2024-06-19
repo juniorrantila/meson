@@ -77,6 +77,7 @@ defaults['cuda_static_linker'] = ['nvlink']
 defaults['gcc_static_linker'] = ['gcc-ar']
 defaults['clang_static_linker'] = ['llvm-ar']
 defaults['nasm'] = ['nasm', 'yasm']
+defaults['cobol'] = ['cobc']
 
 
 def compiler_from_language(env: 'Environment', lang: str, for_machine: MachineChoice) -> T.Optional[Compiler]:
@@ -96,6 +97,7 @@ def compiler_from_language(env: 'Environment', lang: str, for_machine: MachineCh
         'cython': detect_cython_compiler,
         'nasm': detect_nasm_compiler,
         'masm': detect_masm_compiler,
+        'cobol': detect_cobol_compiler,
     }
     return lang_map[lang](env, for_machine) if lang in lang_map else None
 
@@ -1325,6 +1327,30 @@ def detect_masm_compiler(env: 'Environment', for_machine: MachineChoice) -> Comp
         popen_exceptions[' '.join(comp + [arg])] = e
     _handle_exceptions(popen_exceptions, [comp])
     raise EnvironmentException('Unreachable code (exception to make mypy happy)')
+
+def detect_cobol_compiler(env: 'Environment', for_machine: MachineChoice) -> Compiler:
+    from .cobol import CobolCompiler
+    exelist = env.lookup_binary_entry(for_machine, 'cobc')
+    is_cross = env.is_cross_build(for_machine)
+    info = env.machines[for_machine]
+    if exelist is None:
+        # TODO support fallback
+        exelist = [defaults['cobol'][0]]
+
+    # We need a C compiler to properly detect the machine info and linker
+    cc = detect_c_compiler(env, for_machine)
+
+    try:
+        p, out, _ = Popen_safe_logged(exelist + ['-v'], msg='Detecting compiler via')
+    except OSError:
+        raise EnvironmentException('Could not execute Cobol compiler: {}'.format(join_args(exelist)))
+    version = search_version(out)
+    if 'GnuCOBOL' in out:
+        cls = CobolCompiler
+        env.coredata.add_lang_args(cls.language, cls, for_machine, env)
+        return cls(exelist, version, for_machine, is_cross, info, linker=cc.linker)
+
+    raise EnvironmentException('Unknown compiler: ' + join_args(exelist))
 
 # GNU/Clang defines and version
 # =============================
